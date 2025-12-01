@@ -8,9 +8,14 @@ def load_input():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_path = os.path.join(script_dir, "input1.txt")
     
-    with open(input_path, "r") as f:
-        for line in f:
-            yield line.rstrip("\n")
+    try:
+        with open(input_path, "r", encoding="utf-8") as f:
+            for line in f:
+                yield line.rstrip("\n")
+    except FileNotFoundError:
+        print(f"Error: Input file not found at {input_path}")
+        print("Please create input1.txt with your puzzle input.")
+        return
 
 def solve():
     """Solve Part 1"""
