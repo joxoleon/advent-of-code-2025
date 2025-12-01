@@ -18,10 +18,19 @@ def load_input():
         return
 
 def solve():
-    """Solve Part 2"""
-    for line in load_input():
-        # TODO: Process each line
-        print(line)
+    lines = load_input()
+    dial = 50
+    password = 0
+    for line in lines:
+        inc = int(line[1:])
+        if line[0] == 'L':
+            inc = -inc
+        
+        new_dial = dial + inc
+        password += abs(new_dial // 100)
+        dial = new_dial % 100
+        
+    print(password)
 
 if __name__ == "__main__":
     solve()
