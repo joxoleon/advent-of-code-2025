@@ -19,9 +19,38 @@ def load_input():
 
 def solve():
     """Solve Part 1"""
-    for line in load_input():
-        # TODO: Process each line
-        print(line)
+    all_lines = list(load_input())
+    all_ranges = all_lines[0].split(",")
+    
+    invalid_ids = []
+    for num_range in all_ranges:
+        left, right = num_range.split("-")
+        s = int(left)
+        e = int(right)
+        for num in range(s, e + 1):
+            if is_invalid(str(num)):
+                print(f"Invalid id: {num}")
+                invalid_ids.append(num)
+    
+    print(sum(invalid_ids))
+                
+
+def factors(n: int):
+    result = []
+    for i in range(1, int(n**0.5) + 1):
+        if n % i == 0:
+            result.append(i)
+            if i != n // i and n // i != n:
+                result.append(n // i)
+    return sorted(result)
+
+def is_invalid(s: str) -> bool:
+    if len(s) % 2 != 0:
+        return False
+    mid = int(len(s) / 2)
+    l = s[:mid]
+    r = s[mid:]
+    return l == r
 
 if __name__ == "__main__":
     solve()
