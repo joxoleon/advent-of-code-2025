@@ -2,6 +2,7 @@
 """Advent of Code 2025 - Day 03 Part 2"""
 
 import os
+from typing import Tuple
 
 def load_input():
     """Load and return input lines from input2.txt"""
@@ -20,27 +21,38 @@ def load_input():
 def solve():
     total_joltage = 0
     num_bats = 12
-    for line in load_input():
+    lines = load_input()
+    start_time = os.times()
+    for line in lines:
         joltage = ""
         start_i = 0
         batt_count = num_bats
         while batt_count:
-            batt_j = '0'
-            i = start_i
-            while i <= len(line) - batt_count:
-                if line[i] > batt_j:
-                    batt_j = line[i]
-                    start_i = i + 1
-                    if batt_j == '9':
-                        break
-                i += 1
+            lmax, target_i = leftmost_max(line, start_i, len(line) - batt_count)
+            joltage += lmax
+            start_i = target_i + 1
             batt_count -= 1
-            joltage += batt_j
         print(joltage)
         total_joltage += int(joltage)
         
+    end_time = os.times()
     print("")
-    print(total_joltage) 
+    print(total_joltage)
+    print(f"Elapsed time: {end_time.elapsed - start_time.elapsed} seconds")
+    
+def leftmost_max(arr: str, start_i: int, end_i: int) -> Tuple[str, int]:
+    lmax = ' ' 
+    target_i = start_i
+    for i in range(start_i, end_i + 1):
+        if arr[i] > lmax:
+            target_i = i
+            lmax = arr[i]
+            if lmax == '9':
+                break
+    return (lmax, target_i)
+            
+        
+    
         
 
 if __name__ == "__main__":

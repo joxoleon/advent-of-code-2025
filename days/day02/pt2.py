@@ -36,12 +36,10 @@ def solve():
 
 def factors(n: int):
     result = []
-    for i in range(1, int(n**0.5) + 1):
+    for i in range(1, n // 2 + 1):
         if n % i == 0:
             result.append(i)
-            if i != n // i and n // i != n:
-                result.append(n // i)
-    return sorted(result)
+    return result
 
 def is_invalid(s: str) -> bool:
     n = len(s)

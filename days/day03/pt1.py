@@ -18,10 +18,30 @@ def load_input():
         return
 
 def solve():
-    """Solve Part 1"""
+    total_joltage = 0
+    num_bats = 2
     for line in load_input():
-        # TODO: Process each line
-        print(line)
+        joltage = ""
+        start_i = 0
+        batt_count = num_bats
+        while batt_count:
+            batt_j = '0'
+            i = start_i
+            while i <= len(line) - batt_count:
+                if line[i] > batt_j:
+                    batt_j = line[i]
+                    start_i = i + 1
+                    if batt_j == '9':
+                        break
+                i += 1
+            batt_count -= 1
+            joltage += batt_j
+        print(joltage)
+        total_joltage += int(joltage)
+        
+    print("")
+    print(total_joltage) 
+        
 
 if __name__ == "__main__":
     solve()
