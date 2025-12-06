@@ -17,11 +17,33 @@ def load_input():
         print("Please create input1.txt with your puzzle input.")
         return
 
-def solve():
-    """Solve Part 1"""
+def load_matrix():
+    matrix = []
     for line in load_input():
-        # TODO: Process each line
-        print(line)
+        row = line.split()
+        matrix.append(row)
+    return matrix
+
+
+def solve():
+    matrix = load_matrix()
+    start_time = os.times()
+    R, C = len(matrix), len(matrix[0])
+    total = 0
+    for c in range(C):
+        op = matrix[R - 1][c]
+        res = 1 if op == '*' else 0 
+        for r in range(R - 1):
+            if op == '*':
+                res *= int(matrix[r][c])
+            else:
+                res += int(matrix[r][c])
+        total += res
+    end_time = os.times()
+    print(f"Time taken: {end_time.user - start_time.user} seconds")
+    print(total)
+            
+            
 
 if __name__ == "__main__":
     solve()
