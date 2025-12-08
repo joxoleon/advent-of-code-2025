@@ -61,6 +61,7 @@ class UnionFind:
 
 def solve():
     lines = load_lines()
+    start_time = os.times()
     total = 0
     heap = []
     # Precompte distances and place them in a heap
@@ -79,6 +80,8 @@ def solve():
         dist, i, j = heapq.heappop(heap)
         uf.union(i, j)
     res = lines[i][0] * lines[j][0]
+    end_time = os.times()
+    print(f"Time taken: {end_time.user - start_time.user} seconds")
     print(res)
     
         
