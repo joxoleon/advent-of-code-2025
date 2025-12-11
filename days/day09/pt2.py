@@ -17,11 +17,25 @@ def load_input():
         print("Please create input2.txt with your puzzle input.")
         return
 
-def solve():
-    """Solve Part 2"""
+
+def load_lines():
+    lines = []
     for line in load_input():
-        # TODO: Process each line
-        print(line)
+        strs = line.split(",")
+        ints = [int(s) for s in strs]
+        lines.append(ints)
+    return lines
+
+def solve():
+    coords = load_lines()
+    max_dist = 0
+    for i, (x1, y1) in enumerate(coords):
+        for j in range(i + 1, len(coords)):
+            x2, y2 = coords[j]
+            dist = abs(x1 - x2 + 1) * abs(y1 - y2 + 1)
+            max_dist = max(max_dist, dist)
+            print(f"Distance between point {x1},{y1} and point {x2},{y2}: {dist}")
+    print(f"Maximum distance: {max_dist}")
 
 if __name__ == "__main__":
     solve()
