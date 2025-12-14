@@ -1,154 +1,60 @@
-#!/usr/bin/env python3
-"""Advent of Code 2025 - Day 10 Part 2"""
-
 import os
-from typing import List, Tuple
-from collections import defaultdict, deque
-import heapq
-import math
 
 
-def load_input():
-    """Load and return input lines from input2.txt"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(script_dir, "input2.txt")
-    
-    try:
-        with open(input_path, "r", encoding="utf-8") as f:
-            for line in f:
-                yield line.rstrip("\n")
-    except FileNotFoundError:
-        print(f"Error: Input file not found at {input_path}")
-        print("Please create input2.txt with your puzzle input.")
-        return
+def solve(l, b):
+    l = sum(j << c for c, j in enumerate(l))
+    b = [sum((1 << j) for j in i) for i in b]
+    def rsolve(l, idx=0):
+        if l == 0: return 0
+        if idx == len(b): return len(b) + 1
+        return min(rsolve(l, idx + 1), 1 + rsolve(l ^ b[idx], idx + 1))
+    return rsolve(l)
 
-def process_machine_input(line: str) -> Tuple[int, List[int], List[List[int]]]:
-    """Process a single line of input for the machine"""
-    # Joltage ratings - extract the numbers in curly braces
-    curly_start = line.find('{')
-    curly_end = line.find('}')
-    target_joltage_ratings = tuple(int(num) for num in line[curly_start + 1:curly_end].split(','))
-    
-    # Button presses - extract the numbers in parentheses
-    buttons = []
-    button_strs = line.split()[1:-1]  # Skip the first and last parts
-    for bstr in button_strs:
-        bnums = bstr.strip('()').split(',')
-        buttons.append(list(int(num) for num in bnums))
-    
-    return target_joltage_ratings, buttons
-    
-def build_button_vectors(buttons: List[List[int]], n: int) -> List[List[int]]:
-    button_vecs = []
-    for b in buttons:
-        vec = [0] * n
-        for num in b:
-            vec[num] = 1
-        button_vecs.append(vec)
-    return button_vecs
+def poss(s, n, B, x, idx=0):
+    if s == 0: yield x; return
+    Bidx0, Bidx1 = B[idx]
+    g = (min(x[k] for k in B[j][1]) for j in range(idx, len(B)))
+    upper = min(next(g), *(x[k] for k in Bidx1))
+    if n == 1:
+        if s <= upper: yield tuple(x[k] - s*Bidx0[k] for k in range(len(x)))
+    else:
+        lower = max(0, s - sum(g))
+        for i in range(min(s, upper), lower-1, -1):
+            for j in poss(s - i, n - 1, B, tuple(x[k] - i*Bidx0[k] for k in range(len(x))), idx + 1): yield j
 
-def sort_buttons(button_vecs: List[List[int]]) -> List[List[int]]:
-    # sort by number of lights turned on (descending)
-    return sorted(button_vecs, key=lambda x: -sum(x))
+def solve2(r, b):
+    lenr = len(r)
+    lenb = len(b)
+    b.sort(key=len, reverse=True)
+    ba = [tuple(int(j in i) for j in range(lenr)) for i in b]
+    ids = [frozenset(j for j in range(lenb) if ba[j][i]) for i in range(lenr)]
+    out = min((sum(r), *(r[c] + r[d] for c in range(lenr-1) for d in range(c + 1, lenr) if set(range(lenb)) <= (ids[c] | ids[d]))))
+    def rsolve2(x, z, s):
+        nonlocal out
+        y, idsy = min(((i, s & ids[i]) for i in range(lenr) if x[i]), key=lambda w: (len(w[1]), -x[w[0]]))
+        newz = z + x[y]
+        news = s - ids[y]
+        for a in poss(x[y], len(idsy), [(ba[j], b[j]) for j in idsy], x):
+            ids2a = {frozenset(): 0}
+            if any(ids2a.setdefault(news & ids[i], a[i]) != a[i] for i in range(lenr)): continue
+            #if any(i < j and ids2a[i] > ids2a[j] for i, j in product(ids2a, 2)): continue
+            if (Z:=newz + max(vals := ids2a.values())) >= out: continue
+            if len(ids2a) <= 2 or not any(vals): out = Z; continue
+            rsolve2(a, newz, news)
+    rsolve2(r, 0, frozenset(range(lenb)))
+    return out
 
-def lower_bound(remaining, button_vecs, start_idx):
-    n = len(remaining)
-    lb = 0
+with open('input10.txt') as f:
+    count = 0   
+    count2 = 0
+    c = 0
+    for i in f.read().split('\n')[c:]:
+        l = i.split(' ')
+        lights, btns, req = [int(i == '#') for i in l[0][1:-1]], [tuple(map(int, j[1:-1].split(','))) for j in l[1:-1]], list(map(int, l[-1][1:-1].split(',')))
+        count += solve(lights, btns)
+        count2 += solve2(req, btns)
+        print(f"Processed line {i} with result {count} and {count2}")
+        c += 1
 
-    for i in range(n):
-        max_inc = 0
-        for b in button_vecs[start_idx:]:
-            if b[i]:
-                max_inc = 1
-                break
-
-        if max_inc == 0:
-            if remaining[i] > 0:
-                return math.inf
-        else:
-            lb = max(lb, remaining[i])
-
-    return lb
-
-def eliminate_dominated(buttons):
-    res = []
-    for i, a in enumerate(buttons):
-        dominated = False
-        for j, b in enumerate(buttons):
-            if i == j:
-                continue
-            if all(b[k] >= a[k] for k in range(len(a))) and sum(b) >= sum(a):
-                dominated = True
-                break
-        if not dominated:
-            res.append(a)
-    return res
-
-
-def min_button_presses_for_machine(target, buttons):
-    n = len(target)
-
-    # preprocess
-    button_vecs = build_button_vectors(buttons, n)
-    button_vecs = eliminate_dominated(button_vecs)
-    button_vecs = sort_buttons(button_vecs)
-
-    best = sum(target)  # absolute worst case: press single counters
-    memo = {}
-
-    def dfs(idx, remaining, used):
-        nonlocal best
-
-        if used >= best:
-            return
-
-        if all(x == 0 for x in remaining):
-            best = used
-            return
-
-        if idx == len(button_vecs):
-            return
-
-        key = (idx, remaining)
-        prev = memo.get(key)
-        if prev is not None and prev <= used:
-            return
-        memo[key] = used
-
-
-        # lower bound prune
-        lb = lower_bound(remaining, button_vecs, idx)
-        if used + lb >= best:
-            return
-
-        b = button_vecs[idx]
-
-        # max presses for this button
-        max_k = math.inf
-        for i in range(n):
-            if b[i]:
-                max_k = min(max_k, remaining[i])
-        if max_k is math.inf:
-            max_k = 0
-
-        # try large k first (find good solutions early)
-        for k in range(max_k, -1, -1):
-            new_remaining = list(remaining)
-            for i in range(n):
-                if b[i]:
-                    new_remaining[i] -= k
-            dfs(idx + 1, tuple(new_remaining), used + k)
-
-    dfs(0, tuple(target), 0)
-    return best
-
-    
-def solve():
-    total_presses = 0
-    for line in load_input():
-        total_presses += min_button_presses_for_machine(*process_machine_input(line))
-        print(total_presses)
-    print(total_presses)
-
-if __name__ == "__main__":
-    solve()
+print(count)
+print(count2)
