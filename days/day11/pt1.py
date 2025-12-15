@@ -2,26 +2,52 @@
 """Advent of Code 2025 - Day 11 Part 1"""
 
 import os
+from typing import List
+from collections import defaultdict
 
-def load_input():
+def load_input() -> List[str]:
     """Load and return input lines from input1.txt"""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_path = os.path.join(script_dir, "input1.txt")
     
+    lines = []
     try:
         with open(input_path, "r", encoding="utf-8") as f:
             for line in f:
-                yield line.rstrip("\n")
+                lines.append(line.rstrip("\n"))
     except FileNotFoundError:
         print(f"Error: Input file not found at {input_path}")
         print("Please create input1.txt with your puzzle input.")
-        return
+    return lines
+
 
 def solve():
-    """Solve Part 1"""
-    for line in load_input():
-        # TODO: Process each line
-        print(line)
+    lines = load_input()
+    # Construct adj
+    adj = defaultdict(list)
+    for line in lines:
+        parts = line.split(':')
+        node_name = parts[0].strip()
+        neighbors = parts[1].strip().split()
+        for neighbor in neighbors:
+            adj[node_name].append(neighbor)
+    
+    
+    def dfs(node: str) -> int:
+        if node == "out":
+            return 1
+        
+        out_count = 0
+        
+        for neigh in adj[node]:
+            out_count += dfs(neigh)
+        return out_count
+
+    print(dfs("you"))
+                
+            
+    
+        
 
 if __name__ == "__main__":
     solve()
